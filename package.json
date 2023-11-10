@@ -1,0 +1,25 @@
+{
+  "name": "filess-mail-templates",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/main.js",
+    "run": "npm run build && npm run start"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@minify-html/node": "^0.11.1",
+    "cheerio": "^1.0.0-rc.12",
+    "tw-to-css": "0.0.12",
+    "yargs": "^17.7.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.9.0",
+    "@types/yargs": "^17.0.31",
+    "typescript": "^5.2.2"
+  }
+}
