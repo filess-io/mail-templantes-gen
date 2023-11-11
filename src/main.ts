@@ -4,11 +4,15 @@ import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import * as fs from 'fs/promises';
 import path from 'path';
-import { minify as minifyHtml } from '@minify-html/node';
+import { minify as minifyHtml } from 'html-minifier';
 import * as cheerio from 'cheerio';
 import { twi } from "tw-to-css";
 import css from 'css';
 import { getBaseCss, getLatestVersion } from "./constants";
+
+function normalizeStyleValue(style: string) {
+    return style.replace(/"/g, "'");
+}
 
 function classesNotInTailwind(classes: string[]) {
     return classes.filter(c => !twi(c));
@@ -28,7 +32,7 @@ function findStyleForClass($: cheerio.CheerioAPI, className: string) {
     if (style && style.type === 'rule' && 'declarations' in style) {
         return (style.declarations?.map(d => {
             if (d.type === 'declaration' && 'property' in d && 'value' in d && d.property !== '') {
-                return `${d.property}: ${d.value}`;
+                return `${d.property}: ${normalizeStyleValue(d.value ?? '')}`;
             }
             return '';
         }) ?? []).join('; ');
@@ -40,8 +44,6 @@ function findStyleForClass($: cheerio.CheerioAPI, className: string) {
 async function processTemplate(templateName: string) {
     const template = await fs.readFile(path.join(__dirname, '..', 'templates', templateName), 'utf8');
     const $ = cheerio.load(template);
-
-    // insert all base styles to the corresponding elements
 
     const baseStyleTxt = getBaseCss(getLatestVersion());
     const baseStyle = css.parse(baseStyleTxt);
@@ -56,11 +58,12 @@ async function processTemplate(templateName: string) {
                 elements.each((i, el) => {
                     const existingStyle = $(el).attr('style');
                     const styleStr = rule.declarations!.map(d => {
+                        if ('property' in d && d.property?.includes('--')) return ''; // skip custom properties (e.g., --tw-bg-opacity)
                         if (d.type === 'declaration' && 'property' in d && 'value' in d && d.property !== '') {
-                            return `${d.property}: ${d.value}`;
+                            return `${d.property}: ${normalizeStyleValue(d.value ?? '')}`;
                         }
                         return '';
-                    }).join('; ').concat(';');
+                    }).filter(s => s).join('; ');
                     $(el).attr('style', (existingStyle ? `${existingStyle};` : '').concat(styleStr));
                 });
             });
@@ -141,7 +144,8 @@ async function main() {
         let outputData;
         switch (argv.mode) {
             case 'minified':
-                outputData = minifyHtml(Buffer.from(processed), { minify_css: true, do_not_minify_doctype: true });
+                console.log(`Minifying ${templateName}`);
+                outputData = minifyHtml(processed, { minifyCSS: true,  collapseWhitespace: true });
                 break;
 
             default:
