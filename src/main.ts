@@ -64,7 +64,7 @@ async function processTemplate(templateName: string) {
                         }
                         return '';
                     }).filter(s => s).join('; ');
-                    $(el).attr('style', (existingStyle ? `${existingStyle};` : '').concat(styleStr));
+                    $(el).attr('style', (existingStyle ? `${normalizeStyleValue(existingStyle)};` : '').concat(normalizeStyleValue(styleStr)));
                 });
             });
 
@@ -76,14 +76,14 @@ async function processTemplate(templateName: string) {
         const classes = $(el).attr('class')!.split(' ');
         const css = twi(classes, { minify: true, merge: true });
         const existingStyle = $(el).attr('style');
-        if (css) $(el).attr('style', (existingStyle ? `${existingStyle};` : '').concat(css));
+        if (css) $(el).attr('style', (existingStyle ? `${normalizeStyleValue(existingStyle)};` : '').concat(normalizeStyleValue(normalizeStyleValue(css))));
 
         const classesNotInTW = classesNotInTailwind(classes);
         if (classesNotInTW.length > 0) {
             classesNotInTW.forEach(c => {
                 const styleStr = findStyleForClass($, c);
                 const existingStyle = $(el).attr('style');
-                $(el).attr('style', (existingStyle ? `${existingStyle};` : '').concat(styleStr));
+                $(el).attr('style', (existingStyle ? `${normalizeStyleValue(existingStyle)};` : '').concat(normalizeStyleValue(normalizeStyleValue(styleStr))));
             });
         }
 
