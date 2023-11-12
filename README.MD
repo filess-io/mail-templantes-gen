@@ -15,5 +15,5 @@ npm run build
 ## Running
 
 ```
-node dist/main.js --input templates --output rendered --mode none
+node dist/main.js --input templates --output rendered --mode minified
 ```
